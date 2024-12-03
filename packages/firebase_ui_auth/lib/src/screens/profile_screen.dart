@@ -747,30 +747,45 @@ class ProfileScreen extends MultiProviderScreen {
   /// are ignored.
   final Widget? avatar;
 
-  /// Indicates wether a confirmation dialog should be shown when the user
+  /// Indicates whether a confirmation dialog should be shown when the user
   /// tries to unlink a provider.
   final bool showUnlinkConfirmationDialog;
 
   /// {@macro ui.auth.widgets.delete_account_button.show_delete_confirmation_dialog}
   final bool showDeleteConfirmationDialog;
 
-  const ProfileScreen({
-    super.key,
-    super.auth,
-    super.providers,
-    this.avatar,
-    this.avatarPlaceholderColor,
-    this.avatarShape,
-    this.avatarSize,
-    this.children = const [],
-    this.actions,
-    this.appBar,
-    this.cupertinoNavigationBar,
-    this.actionCodeSettings,
-    this.showMFATile = false,
-    this.showUnlinkConfirmationDialog = false,
-    this.showDeleteConfirmationDialog = false,
-  });
+  /// indicates whether to show the user avatar (default true)
+  final bool showAvatar;
+
+  /// indicates whether to show the editable user name widget
+  final bool showUserDisplayName;
+
+  /// indicates whether to show the auth providers
+  final bool showAuthProviders;
+
+  /// indicates whether to show the delete button
+  final bool showDeleteButton;
+
+  const ProfileScreen(
+      {super.key,
+      super.auth,
+      super.providers,
+      this.avatar,
+      this.avatarPlaceholderColor,
+      this.avatarShape,
+      this.avatarSize,
+      this.children = const [],
+      this.actions,
+      this.appBar,
+      this.cupertinoNavigationBar,
+      this.actionCodeSettings,
+      this.showMFATile = false,
+      this.showUnlinkConfirmationDialog = false,
+      this.showDeleteConfirmationDialog = false,
+      this.showAvatar = true,
+      this.showUserDisplayName = true,
+      this.showAuthProviders = true,
+      this.showDeleteButton = true});
 
   Future<bool> _reauthenticate(BuildContext context) {
     final l = FirebaseUILocalizations.labelsOf(context);
@@ -834,8 +849,9 @@ class ProfileScreen extends MultiProviderScreen {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        avatarWidget,
-        Align(child: EditableUserDisplayName(auth: auth)),
+        if (showAvatar) avatarWidget,
+        if (showUserDisplayName)
+          Align(child: EditableUserDisplayName(auth: auth)),
         if (!user.emailVerified) ...[
           RebuildScope(
             builder: (context) {
@@ -851,47 +867,49 @@ class ProfileScreen extends MultiProviderScreen {
             scopeKey: emailVerificationScopeKey,
           ),
         ],
-        RebuildScope(
-          builder: (context) {
-            final user = auth.currentUser!;
-            final linkedProviders = getLinkedProviders(user);
+        if (showAuthProviders)
+          RebuildScope(
+            builder: (context) {
+              final user = auth.currentUser!;
+              final linkedProviders = getLinkedProviders(user);
 
-            if (linkedProviders.isEmpty) {
-              return const SizedBox.shrink();
-            }
+              if (linkedProviders.isEmpty) {
+                return const SizedBox.shrink();
+              }
 
-            return Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: _LinkedProvidersRow(
-                auth: auth,
-                providers: linkedProviders,
-                onProviderUnlinked: providersScopeKey.rebuild,
-                showUnlinkConfirmationDialog: showUnlinkConfirmationDialog,
-              ),
-            );
-          },
-          scopeKey: providersScopeKey,
-        ),
-        RebuildScope(
-          builder: (context) {
-            final user = auth.currentUser!;
-            final availableProviders = getAvailableProviders(context, user);
+              return Padding(
+                padding: const EdgeInsets.only(top: 32),
+                child: _LinkedProvidersRow(
+                  auth: auth,
+                  providers: linkedProviders,
+                  onProviderUnlinked: providersScopeKey.rebuild,
+                  showUnlinkConfirmationDialog: showUnlinkConfirmationDialog,
+                ),
+              );
+            },
+            scopeKey: providersScopeKey,
+          ),
+        if (showAuthProviders)
+          RebuildScope(
+            builder: (context) {
+              final user = auth.currentUser!;
+              final availableProviders = getAvailableProviders(context, user);
 
-            if (availableProviders.isEmpty) {
-              return const SizedBox.shrink();
-            }
+              if (availableProviders.isEmpty) {
+                return const SizedBox.shrink();
+              }
 
-            return Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: _AvailableProvidersRow(
-                auth: auth,
-                providers: availableProviders,
-                onProviderLinked: providersScopeKey.rebuild,
-              ),
-            );
-          },
-          scopeKey: providersScopeKey,
-        ),
+              return Padding(
+                padding: const EdgeInsets.only(top: 32),
+                child: _AvailableProvidersRow(
+                  auth: auth,
+                  providers: availableProviders,
+                  onProviderLinked: providersScopeKey.rebuild,
+                ),
+              );
+            },
+            scopeKey: providersScopeKey,
+          ),
         if (showMFATile)
           RebuildScope(
             builder: (context) {
@@ -928,13 +946,14 @@ class ProfileScreen extends MultiProviderScreen {
           variant: ButtonVariant.outlined,
         ),
         const SizedBox(height: 8),
-        DeleteAccountButton(
-          auth: auth,
-          showDeleteConfirmationDialog: showDeleteConfirmationDialog,
-          onSignInRequired: () {
-            return _reauthenticate(context);
-          },
-        ),
+        if (showDeleteButton)
+          DeleteAccountButton(
+            auth: auth,
+            showDeleteConfirmationDialog: showDeleteConfirmationDialog,
+            onSignInRequired: () {
+              return _reauthenticate(context);
+            },
+          ),
       ],
     );
     final body = Padding(
