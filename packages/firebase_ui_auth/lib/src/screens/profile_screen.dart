@@ -340,6 +340,7 @@ class _LinkedProvidersRowState extends State<_LinkedProvidersRow> {
 class _EmailVerificationBadge extends StatefulWidget {
   final fba.FirebaseAuth auth;
   final fba.ActionCodeSettings? actionCodeSettings;
+
   const _EmailVerificationBadge({
     required this.auth,
     this.actionCodeSettings,
@@ -436,9 +437,9 @@ class _EmailVerificationBadgeState extends State<_EmailVerificationBadge> {
             )
           else
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Don't make email verification dismissable as it is required
+                // Don't make email verification dismissible as it is required
                 // to continue using the app
                 // if (state != EmailVerificationState.sent &&
                 //     state != EmailVerificationState.sending)
@@ -452,15 +453,17 @@ class _EmailVerificationBadgeState extends State<_EmailVerificationBadge> {
                 //     },
                 //   ),
                 if (state != EmailVerificationState.sent)
-                  LoadingButton(
-                    isLoading: state == EmailVerificationState.sending,
-                    label: l.sendVerificationEmailLabel,
-                    onTap: () {
-                      service.sendVerificationEmail(
-                        platform,
-                        widget.actionCodeSettings,
-                      );
-                    },
+                  Expanded(
+                    child: LoadingButton(
+                      isLoading: state == EmailVerificationState.sending,
+                      label: l.sendVerificationEmailLabel,
+                      onTap: () {
+                        service.sendVerificationEmail(
+                          platform,
+                          widget.actionCodeSettings,
+                        );
+                      },
+                    ),
                   )
                 else
                   UniversalButton(
