@@ -438,17 +438,19 @@ class _EmailVerificationBadgeState extends State<_EmailVerificationBadge> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (state != EmailVerificationState.sent &&
-                    state != EmailVerificationState.sending)
-                  UniversalButton(
-                    variant: ButtonVariant.text,
-                    materialColor: Theme.of(context).colorScheme.error,
-                    cupertinoColor: CupertinoColors.destructiveRed,
-                    text: l.dismissButtonLabel,
-                    onPressed: () {
-                      setState(service.dismiss);
-                    },
-                  ),
+                // Don't make email verification dismissable as it is required
+                // to continue using the app
+                // if (state != EmailVerificationState.sent &&
+                //     state != EmailVerificationState.sending)
+                //   UniversalButton(
+                //     variant: ButtonVariant.text,
+                //     materialColor: Theme.of(context).colorScheme.error,
+                //     cupertinoColor: CupertinoColors.destructiveRed,
+                //     text: l.dismissButtonLabel,
+                //     onPressed: () {
+                //       setState(service.dismiss);
+                //     },
+                //   ),
                 if (state != EmailVerificationState.sent)
                   LoadingButton(
                     isLoading: state == EmailVerificationState.sending,
