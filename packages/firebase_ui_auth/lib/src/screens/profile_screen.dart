@@ -89,15 +89,11 @@ class _AvailableProvidersRowState extends State<_AvailableProvidersRow> {
                   context: context,
                   provider: provider,
                 ).then((_) => widget.onProviderLinked()),
-                child: Icon(
-                  providerIcon(context, provider.providerId),
-                ),
+                child: providerIcon(context, provider),
               )
             else
               IconButton(
-                icon: Icon(
-                  providerIcon(context, provider.providerId),
-                ),
+                icon: providerIcon(context, provider),
                 onPressed: () => connectProvider(
                   context: context,
                   provider: provider,
@@ -246,7 +242,8 @@ class _LinkedProvidersRowState extends State<_LinkedProvidersRow> {
     }
   }
 
-  Widget buildProviderIcon(BuildContext context, String providerId) {
+  Widget buildProviderIcon(BuildContext context, AuthProvider provider) {
+    final providerId = provider.providerId;
     final isCupertino = CupertinoUserInterfaceLevel.maybeOf(context) != null;
     const animationDuration = Duration(milliseconds: 150);
     const curve = Curves.easeOut;
@@ -267,7 +264,7 @@ class _LinkedProvidersRowState extends State<_LinkedProvidersRow> {
                   size: size - (size / 4),
                   borderWidth: 1,
                 )
-              : Icon(providerIcon(context, providerId)),
+              : providerIcon(context, provider),
         ),
         if (unlinkingProvider != providerId)
           AnimatedOpacity(
@@ -306,7 +303,7 @@ class _LinkedProvidersRowState extends State<_LinkedProvidersRow> {
     Widget child = Row(
       children: [
         for (var provider in widget.providers)
-          buildProviderIcon(context, provider.providerId)
+          buildProviderIcon(context, provider)
       ]
           .map((e) => [e, const SizedBox(width: 8)])
           .expand((element) => element)
@@ -759,6 +756,9 @@ class ProfileScreen extends MultiProviderScreen {
   /// {@macro ui.auth.widgets.delete_account_button.show_delete_confirmation_dialog}
   final bool showDeleteConfirmationDialog;
 
+  /// {@macro ui.auth.widgets.delete_account_button.delete_confirmation}
+  final Future<bool> Function(BuildContext context)? deleteConfirmation;
+
   /// indicates whether to show the user avatar (default true)
   final bool showAvatar;
 
@@ -771,26 +771,28 @@ class ProfileScreen extends MultiProviderScreen {
   /// indicates whether to show the delete button
   final bool showDeleteButton;
 
-  const ProfileScreen(
-      {super.key,
-      super.auth,
-      super.providers,
-      this.avatar,
-      this.avatarPlaceholderColor,
-      this.avatarShape,
-      this.avatarSize,
-      this.children = const [],
-      this.actions,
-      this.appBar,
-      this.cupertinoNavigationBar,
-      this.actionCodeSettings,
-      this.showMFATile = false,
-      this.showUnlinkConfirmationDialog = false,
-      this.showDeleteConfirmationDialog = false,
-      this.showAvatar = true,
-      this.showUserDisplayName = true,
-      this.showAuthProviders = true,
-      this.showDeleteButton = true});
+  const ProfileScreen({
+    super.key,
+    super.auth,
+    super.providers,
+    this.avatar,
+    this.avatarPlaceholderColor,
+    this.avatarShape,
+    this.avatarSize,
+    this.children = const [],
+    this.actions,
+    this.appBar,
+    this.cupertinoNavigationBar,
+    this.actionCodeSettings,
+    this.showMFATile = false,
+    this.showUnlinkConfirmationDialog = false,
+    this.showDeleteConfirmationDialog = false,
+    this.deleteConfirmation,
+    this.showAvatar = true,
+    this.showUserDisplayName = true,
+    this.showAuthProviders = true,
+    this.showDeleteButton = true,
+  });
 
   Future<bool> _reauthenticate(BuildContext context) {
     final l = FirebaseUILocalizations.labelsOf(context);
@@ -953,12 +955,13 @@ class ProfileScreen extends MultiProviderScreen {
         const SizedBox(height: 8),
         if (showDeleteButton)
           DeleteAccountButton(
-            auth: auth,
-            showDeleteConfirmationDialog: showDeleteConfirmationDialog,
-            onSignInRequired: () {
-              return _reauthenticate(context);
-            },
-          ),
+          auth: auth,
+          showDeleteConfirmationDialog: showDeleteConfirmationDialog,
+          deleteConfirmation: deleteConfirmation,
+          onSignInRequired: () {
+            return _reauthenticate(context);
+          },
+        ),
       ],
     );
     final body = Padding(
